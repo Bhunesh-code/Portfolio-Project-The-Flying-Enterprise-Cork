@@ -1,0 +1,11 @@
+product,category,units_sold,total_revenue,gp_margin_pct,revenue_rank
+Fish & Chips,Food,13469,208769.5,64.5,1
+Burger & Chips,Food,13823,200433.5,65.5,2
+Club Sandwich,Food,13720,178360.0,65.4,3
+Chicken Wings,Food,13776,165312.0,66.7,4
+Loaded Fries,Food,13901,132059.5,68.4,5
+Gin & Tonic,Spirits,13229,119061.0,72.2,6
+Prosecco Glass,Wine,13628,109024.0,68.8,7
+Jameson & Mixer,Spirits,13605,108840.0,72.5,8
+Vodka & Mixer,Spirits,13607,102052.5,76.0,9
+House Red Wine,Wine,13520,101400.0,73.3,10

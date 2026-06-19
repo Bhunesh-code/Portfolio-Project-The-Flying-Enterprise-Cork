@@ -1,0 +1,3 @@
+day_type,trading_days,total_transactions,total_revenue,avg_per_transaction,avg_daily_revenue
+Normal Day,720,157242,1975434.8,12.56,2743.66
+Event Day,11,6500,81488.9,12.54,7408.08

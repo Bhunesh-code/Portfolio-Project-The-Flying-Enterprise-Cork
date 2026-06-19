@@ -1,0 +1,5 @@
+segment,customer_count,avg_visits,avg_spend_eur,avg_lifetime_value,segment_total_revenue,pct_of_customers
+VIP,719,84.9,50.56,4288.53,3083456.3,59.9
+Regular,296,33.7,50.52,1707.75,505494.35,24.7
+Occasional,152,11.6,47.62,551.6,83843.24,12.7
+New,33,2.4,51.86,123.84,4086.84,2.8
