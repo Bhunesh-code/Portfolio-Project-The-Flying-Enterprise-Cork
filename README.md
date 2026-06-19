@@ -1,3 +1,15 @@
+# 🍺 The Flying Enterprise Cork — End-to-End Data Portfolio
+
+## Master Portfolio Overview & Scope
+This repository contains a comprehensive, end-to-end data ecosystem simulating the operations of **The Flying Enterprise**, a high-volume pub and restaurant in Cork, Ireland. 
+
+The scope of this portfolio demonstrates the full lifecycle of enterprise data—from raw transaction generation to executive dashboards, cloud data engineering, advanced SQL modeling, and predictive machine learning. It is divided into four distinct phases, showcasing capabilities across the complete data spectrum:
+
+* **Project 1:** Sales & Revenue Dashboard (Data Analytics & BI)
+* **Project 2:** Cloud ETL Pipeline (Data Engineering & AWS)
+* **Project 3:** Advanced SQL Analytics (Analytics Engineering & Data Warehousing)
+* **Project 4:** Machine Learning Forecasting (Data Science & Predictive Analytics)
+
 # Project 1 — Sales & Revenue Dashboard
 
 > **The Flying Enterprise Cork** | Python · Pandas · NumPy · Matplotlib
@@ -8,7 +20,7 @@
 
 This project simulates the work of a Data Analyst embedded in a busy Cork pub and beer garden. Raw point-of-sale transaction data is cleaned, aggregated, and transformed into an executive-level sales dashboard — the kind of report leadership teams use in weekly business reviews.
 
-This directly mirrors work completed at **Codeup India**, where 8 Tableau dashboards tracking sales KPIs, customer trends, and pipeline health were built and adopted by cross-functional leadership.
+This directly mirrors work completed at **Codeup**, where 8 Tableau dashboards tracking sales KPIs, customer trends, and pipeline health were built and adopted by cross-functional leadership.
 
 ---
 
@@ -105,5 +117,110 @@ The dashboard contains:
 `Data Cleaning` `KPI Reporting` `Time-Series Analysis` `Data Visualisation` `Business Intelligence` `Python` `Pandas` `Matplotlib` `Executive Dashboards`
 
 ---
+
+# Project 2 — Cloud ETL Data Pipeline
+
+> **The Flying Enterprise Cork** | Python · AWS S3 · AWS Glue · Athena
+
+---
+
+## Overview
+
+This project simulates the work of a Data Engineer building a robust, cloud-native architecture. Raw, messy point-of-sale data is ingested, validated, transformed, and loaded into an AWS cloud data lake environment.
+
+It demonstrates the ability to move beyond local CSVs into scalable cloud infrastructure, featuring an automated JSON audit trail to track pipeline health, row counts, and data latency—directly mirroring the pipeline optimization work that reduced ingestion latency by 35% in my professional experience.
+
+---
+
+## Business Questions Answered
+
+| Question | Insight Delivered |
+|---|---|
+| How do we automate data ingestion? | Engineered a 5-stage Extract-Validate-Transform-Load-Query pipeline. |
+| Is the data trustworthy and clean? | Enforced strict schema validation and null-handling checkpoints. |
+| How do we track pipeline failures? |  |
+| When is the pub busiest? | Peak hour: 12:00 — Peak day: Saturday |
+| Do events significantly boost revenue? | +220% uplift on event days |
+| Are we growing year-on-year? | 2023 vs 2024 trend tracked monthly |
+
+---
+
+## Tech Stack
+
+```
+Language:    Python 3.11, SQL
+Cloud:       AWS S3, AWS Glue, AWS Athena
+Libraries:   Pandas, Boto3 (AWS SDK), JSON
+Input:       Raw transaction batches
+Output:      Cleaned Parquet files in S3 + JSON Audit Logs
+```
+
+---
+
+## Project Structure
+
+```
+project2-etl-pipeline/
+├── data/
+│   ├── raw/                  ← Incoming daily data batches
+│   └── processed/            ← Cleaned, partitioned data
+├── scripts/
+│   └── aws_etl_pipeline.py   ← Main ELT execution script
+├── logs/
+│   └── pipeline_audit.json   ← Automated execution tracking
+├── P2_ETL_Pipeline.ipynb     ← Interactive pipeline walkthrough
+└── README.md
+```
+
+---
+
+## Key Techniques
+
+- **Extract, Transform, Load (ETL)** — Designing a fault-tolerant 5-stage data movement architecture.
+- **Cloud Integration** — Interacting with AWS S3 programmatically using boto3.
+- **Data Lineage & Auditing** — Writing custom JSON logs capturing timestamps, row transformations, and error traps.
+- **Data Partitioning** — Optimizing output files for downstream query performance.
+
+---
+
+## How to Run
+
+```bash
+# From the root portfolio folder
+python generate_data.py
+
+# Run the dashboard
+cd project1-sales-dashboard/scripts
+python sales_dashboard.py
+```
+
+Expected terminal output:
+```
+Total Revenue: €2,056,923.70
+GP Margin:     70.3%
+Peak Hour:     12:00
+Peak Day:      Saturday
+Event Uplift:  +220%
+✅ Dashboard saved → outputs/project1_sales_dashboard.png
+```
+
+---
+
+## Dashboard Preview
+
+> Run the script to generate `outputs/project1_sales_dashboard.png`
+
+The dashboard contains:
+1. **4 KPI cards** — Total Revenue, Gross Profit, GP Margin, YoY Growth
+2. **Monthly revenue trend** — 24-month bar + line chart, colour-coded by year
+3. **Category revenue pie** — share of wallet by product type
+4. **Hourly revenue heatmap** — average revenue by hour of day (12:00–23:00)
+5. **Day-of-week breakdown** — which days generate the most total revenue
+
+---
+
+## Skills Demonstrated
+
+'Data Engineering' 'AWS S3' 'AWS Glue' 'AWS Athena' 'ETL/ELT Pipelines' 'Python (Boto3)' 'Data Lineage' 'Schema Validation'
 
 *Part of the Flying Enterprise Cork — Data Analytics Portfolio by Bhunesh Dadheech*
