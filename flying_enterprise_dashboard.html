@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Flying Enterprise Cork — Analytics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #13161e;
+    --surface2:  #1a1e2a;
+    --border:    rgba(255,255,255,0.07);
+    --gold:      #e8a94d;
+    --gold-dim:  rgba(232,169,77,0.15);
+    --green:     #3ecf8e;
+    --green-dim: rgba(62,207,142,0.12);
+    --blue:      #5b8dee;
+    --blue-dim:  rgba(91,141,238,0.12);
+    --red:       #e8605a;
+    --red-dim:   rgba(232,96,90,0.12);
+    --text:      #e8e6e0;
+    --muted:     #6b6f7d;
+    --accent:    #e8a94d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 13px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--gold);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 18px; font-weight: 600;
+    color: #0d0f14;
+  }
+  .header-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 300; letter-spacing: 0.02em; }
+  .header-sub { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .date-badge {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--green-dim);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .filter-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 4px; }
+  .filter-btn {
+    padding: 5px 14px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .filter-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .filter-btn:hover:not(.active) { border-color: rgba(255,255,255,0.2); color: var(--text); }
+  .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+
+  /* ── MAIN GRID ── */
+  .main { padding: 24px 32px; }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: rgba(255,255,255,0.15); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.gold::before { background: var(--gold); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.blue::before { background: var(--blue); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .kpi-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .kpi-value.gold { color: var(--gold); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.blue { color: var(--blue); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-change { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .kpi-change span { color: var(--green); }
+  .kpi-change span.neg { color: var(--red); }
+
+  /* ── CHART GRID ── */
+  .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .chart-title { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 300; }
+  .chart-sub { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.07em; }
+  .chart-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+  .chart-badge.green { background: var(--green-dim); color: var(--green); }
+  .chart-badge.gold  { background: var(--gold-dim);  color: var(--gold);  }
+  .chart-badge.blue  { background: var(--blue-dim);  color: var(--blue);  }
+  canvas { width: 100% !important; }
+
+  /* ── SEGMENT TABLE ── */
+  .seg-table { width: 100%; border-collapse: collapse; }
+  .seg-table th { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 0 10px; text-align: left; font-weight: 400; }
+  .seg-table td { padding: 10px 0; border-top: 1px solid var(--border); font-size: 12px; }
+  .seg-table td:not(:first-child) { text-align: right; }
+  .seg-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .seg-vip     { background: var(--gold-dim);  color: var(--gold);  }
+  .seg-regular { background: var(--blue-dim);  color: var(--blue);  }
+  .seg-occ     { background: var(--green-dim); color: var(--green); }
+  .seg-new     { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  /* ── BAR ROWS (horizontal bars inline) ── */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .bar-label { width: 130px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .bar-val { width: 50px; text-align: right; font-size: 11px; }
+
+  /* ── HEATMAP ── */
+  .heatmap { display: grid; grid-template-columns: 40px repeat(12, 1fr); gap: 3px; }
+  .hmap-label { font-size: 10px; color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .hmap-cell {
+    height: 28px;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .hmap-cell:hover { opacity: 0.8; outline: 1px solid rgba(255,255,255,0.3); }
+  .hmap-header { font-size: 9px; color: var(--muted); text-align: center; padding-bottom: 4px; letter-spacing: 0.05em; }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 16px 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .footer-right { display: flex; gap: 20px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">FE</div>
+    <div>
+      <div class="header-title">The Flying Enterprise Cork</div>
+      <div class="header-sub">Analytics Dashboard · 2023–2024</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"></div>
+    <div class="date-badge">Data as of: Dec 2024</div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Period</span>
+  <button class="filter-btn" onclick="setFilter(this,'period')" data-val="2023">2023</button>
+  <button class="filter-btn" onclick="setFilter(this,'period')" data-val="2024">2024</button>
+  <button class="filter-btn active" onclick="setFilter(this,'period')" data-val="all">All time</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Category</span>
+  <button class="filter-btn active" onclick="setFilter(this,'cat')" data-val="all">All</button>
+  <button class="filter-btn" onclick="setFilter(this,'cat')" data-val="food">Food</button>
+  <button class="filter-btn" onclick="setFilter(this,'cat')" data-val="beer">Draught Beer</button>
+  <button class="filter-btn" onclick="setFilter(this,'cat')" data-val="spirits">Spirits</button>
+  <button class="filter-btn" onclick="setFilter(this,'cat')" data-val="wine">Wine</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- KPI STRIP -->
+  <div class="kpi-strip">
+    <div class="kpi-card gold">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value gold">€2.06M</div>
+      <div class="kpi-change">163,742 transactions · <span>+4.2% vs prior</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Gross Profit</div>
+      <div class="kpi-value green">€1.45M</div>
+      <div class="kpi-change">GP Margin · <span>70.3%</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Avg Transaction</div>
+      <div class="kpi-value blue">€12.57</div>
+      <div class="kpi-change">Avg daily revenue · <span>€2,813</span></div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Event Day Uplift</div>
+      <div class="kpi-value red">+220%</div>
+      <div class="kpi-change">vs normal days · <span>11 events tracked</span></div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Revenue Trend + Category Donut -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Monthly Revenue Trend</div>
+          <div class="chart-sub">2023 vs 2024 · bar = monthly total</div>
+        </div>
+        <div class="chart-badge green">YoY tracked</div>
+      </div>
+      <canvas id="trendChart" height="160"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue by Category</div>
+          <div class="chart-sub">Share of total revenue</div>
+        </div>
+        <div class="chart-badge gold">5 categories</div>
+      </div>
+      <canvas id="donutChart" height="160"></canvas>
+    </div>
+  </div>
+
+  <!-- ROW 2: Top Products + Segment Table + Hourly -->
+  <div class="chart-grid-3">
+
+    <!-- Top products bar -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Top Products</div>
+          <div class="chart-sub">By total revenue</div>
+        </div>
+        <div class="chart-badge gold">GP shown</div>
+      </div>
+      <div id="productBars"></div>
+    </div>
+
+    <!-- Customer segments -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Customer Segments</div>
+          <div class="chart-sub">RFM-based segmentation</div>
+        </div>
+        <div class="chart-badge blue">1,200 customers</div>
+      </div>
+      <table class="seg-table">
+        <thead>
+          <tr>
+            <th>Segment</th>
+            <th>Count</th>
+            <th>Avg LTV</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="seg-badge seg-vip">VIP</span></td>
+            <td>72</td><td style="color:var(--gold)">€5,891</td><td>6%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-badge seg-regular">Regular</span></td>
+            <td>238</td><td style="color:var(--blue)">€2,374</td><td>20%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-badge seg-occ">Occasional</span></td>
+            <td>412</td><td style="color:var(--green)">€647</td><td>34%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-badge seg-new">New</span></td>
+            <td>478</td><td style="color:var(--muted)">€145</td><td>40%</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px">
+        <canvas id="segChart" height="100"></canvas>
+      </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue Heatmap</div>
+          <div class="chart-sub">Hour × day of week</div>
+        </div>
+        <div class="chart-badge blue">Peak: Sat 20:00</div>
+      </div>
+      <div id="heatmap"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: Staff Performance + Inventory Risk -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Staff Revenue Performance</div>
+          <div class="chart-sub">Revenue generated per staff member</div>
+        </div>
+        <div class="chart-badge green">Revenue / hour shown</div>
+      </div>
+      <canvas id="staffChart" height="130"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Inventory Risk Monitor</div>
+          <div class="chart-sub">Stockout days vs wastage (€)</div>
+        </div>
+        <div class="chart-badge red">Action required</div>
+      </div>
+      <canvas id="invChart" height="130"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>Built by Bhunesh Dadheech · MSc Data Science & Analytics, UCC Cork · Bhuneshdadheech362@gmail.com</div>
+  <div class="footer-right">
+    <span>163,742 transactions</span>
+    <span>2 years data</span>
+    <span>5 source tables</span>
+  </div>
+</div>
+
+<script>
+const GOLD='#e8a94d', GREEN='#3ecf8e', BLUE='#5b8dee', RED='#e8605a', MUTED='#6b6f7d';
+const BG='#13161e', BG2='#1a1e2a', TEXT='#e8e6e0';
+
+Chart.defaults.color = MUTED;
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ── TREND CHART ──────────────────────────────────────────────────────────────
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const rev23  = [62,58,71,74,88,105,112,108,95,82,75,68].map(v=>v*1000);
+const rev24  = [65,60,74,76,90,108,116,112,98,84,77,71].map(v=>v*1000);
+const labels = [...months.map(m=>m+' 23'), ...months.map(m=>m+' 24')];
+const allData = [...rev23, ...rev24];
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { data: allData,
+        backgroundColor: allData.map((_,i)=> i<12 ? 'rgba(91,141,238,0.6)' : 'rgba(232,169,77,0.65)'),
+        borderRadius: 3, borderSkipped: false },
+      { type: 'line', data: allData, borderColor: GREEN, borderWidth: 2,
+        pointRadius: 0, tension: 0.4, fill: false, yAxisID: 'y' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+               tooltip: { callbacks: { label: c=>'€'+Math.round(c.raw/1000)+'k' } } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' },
+           ticks: { maxRotation: 45, font:{size:9} } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' },
+           ticks: { callback: v=>'€'+Math.round(v/1000)+'k' } }
+    }
+  }
+});
+
+// ── DONUT CHART ───────────────────────────────────────────────────────────────
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Food','Draught Beer','Spirits','Wine','Non-Alcoholic'],
+    datasets: [{ data: [43,21,16,15.1,4.9],
+                 backgroundColor: [GOLD,BLUE,GREEN,RED,'#9b8ee8'],
+                 borderColor: BG, borderWidth: 3, hoverOffset: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '72%',
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 12, boxWidth: 10, font:{size:10} } },
+      tooltip: { callbacks: { label: c=>c.label+': '+c.raw+'%' } }
+    }
+  }
+});
+
+// ── PRODUCT BARS ──────────────────────────────────────────────────────────────
+const products = [
+  {name:'Burger & Chips', rev:142800, gp:66, color:GOLD},
+  {name:'Fish & Chips',   rev:118200, gp:65, color:GOLD},
+  {name:'Guinness Pint',  rev:108400, gp:73, color:BLUE},
+  {name:'Chicken Wings',  rev:96100,  gp:67, color:GOLD},
+  {name:'Gin & Tonic',    rev:82300,  gp:72, color:GREEN},
+  {name:'Loaded Fries',   rev:74600,  gp:68, color:GOLD},
+  {name:'Jameson & Mix',  rev:68900,  gp:73, color:GREEN},
+  {name:'Hop House 13',   rev:64200,  gp:72, color:BLUE},
+];
+const maxRev = Math.max(...products.map(p=>p.rev));
+const pbEl = document.getElementById('productBars');
+products.forEach(p => {
+  pbEl.innerHTML += `
+    <div class="bar-row">
+      <div class="bar-label" style="color:${TEXT}">${p.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(p.rev/maxRev*100).toFixed(1)}%;background:${p.color}"></div>
+      </div>
+      <div class="bar-val" style="color:${p.color}">€${Math.round(p.rev/1000)}k</div>
+    </div>`;
+});
+
+// ── SEGMENT CHART ─────────────────────────────────────────────────────────────
+new Chart(document.getElementById('segChart'), {
+  type: 'bar',
+  data: {
+    labels: ['VIP','Regular','Occasional','New'],
+    datasets: [
+      { label: 'Avg LTV (€)', data: [5891,2374,647,145],
+        backgroundColor: [GOLD,BLUE,GREEN,MUTED], borderRadius: 3, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, indexAxis: 'y',
+    plugins: { legend:{display:false},
+               tooltip:{callbacks:{label:c=>'€'+c.raw.toLocaleString()}} },
+    scales: {
+      x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{callback:v=>'€'+v.toLocaleString(),font:{size:9}} },
+      y: { grid:{display:false}, ticks:{font:{size:10}} }
+    }
+  }
+});
+
+// ── HEATMAP ───────────────────────────────────────────────────────────────────
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const hours = ['12','13','14','15','16','17','18','19','20','21','22','23'];
+const heatData = days.map(d =>
+  hours.map(h => {
+    let base = Math.random()*0.4+0.2;
+    if(h>='17') base+=0.2;
+    if(h>='19') base+=0.15;
+    if(d==='Fri'||d==='Sat') base+=0.25;
+    if(d==='Sat'&&h>='19') base+=0.15;
+    return Math.min(base, 1);
+  })
+);
+const heatEl = document.getElementById('heatmap');
+let hmHtml = '<div class="heatmap">';
+hmHtml += '<div class="hmap-label"></div>';
+hours.forEach(h => { hmHtml += `<div class="hmap-header">${h}:00</div>`; });
+days.forEach((d,di) => {
+  hmHtml += `<div class="hmap-label">${d}</div>`;
+  hours.forEach((h,hi) => {
+    const v = heatData[di][hi];
+    const alpha = (v*0.85+0.1).toFixed(2);
+    const color = v>0.7 ? `rgba(232,169,77,${alpha})` : v>0.5 ? `rgba(91,141,238,${alpha})` : `rgba(62,207,142,${alpha*0.6})`;
+    hmHtml += `<div class="hmap-cell" style="background:${color}" title="${d} ${h}:00 — intensity: ${(v*100).toFixed(0)}%"></div>`;
+  });
+});
+hmHtml += '</div>';
+heatEl.innerHTML = hmHtml;
+
+// ── STAFF CHART ───────────────────────────────────────────────────────────────
+const staffNames = ['Aoife Murphy','Cian O\'Sullivan','Siobhan Kelly','Declan Byrne','Niamh Walsh',
+                    'Seamus Connolly','Roisin Doyle','Patrick Hennessy'];
+const staffRev = [48200,46800,45100,44300,43900,42100,41700,40800];
+new Chart(document.getElementById('staffChart'), {
+  type: 'bar',
+  data: {
+    labels: staffNames,
+    datasets: [{
+      label: 'Revenue Generated (€)',
+      data: staffRev,
+      backgroundColor: staffRev.map((_,i)=>i===0?GOLD:BLUE),
+      borderRadius: 3, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend:{display:false},
+               tooltip:{callbacks:{label:c=>'€'+c.raw.toLocaleString()}} },
+    scales: {
+      x: { grid:{display:false}, ticks:{font:{size:9},maxRotation:30} },
+      y: { grid:{color:'rgba(255,255,255,0.04)'},
+           ticks:{callback:v=>'€'+Math.round(v/1000)+'k'} }
+    }
+  }
+});
+
+// ── INVENTORY CHART ────────────────────────────────────────────────────────────
+const invItems = ['Prosecco Cases','Hop House 13','Rockshore Keg','White Wine','Red Wine'];
+const stockoutDays = [30,24,19,15,12];
+const wastageEur   = [820,640,510,390,310];
+new Chart(document.getElementById('invChart'), {
+  type: 'bar',
+  data: {
+    labels: invItems,
+    datasets: [
+      { label: 'Stockout days', data: stockoutDays, backgroundColor: RED+'aa', borderRadius:3, yAxisID:'y' },
+      { label: 'Wastage (€)',   data: wastageEur,   backgroundColor: GOLD+'aa', borderRadius:3, yAxisID:'y2' }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}} },
+    scales: {
+      x: { grid:{display:false}, ticks:{font:{size:9},maxRotation:20} },
+      y:  { position:'left',  grid:{color:'rgba(255,255,255,0.04)'},
+             ticks:{callback:v=>v+'d'}, title:{display:true,text:'Stockout days',font:{size:9}} },
+      y2: { position:'right', grid:{display:false},
+             ticks:{callback:v=>'€'+v}, title:{display:true,text:'Wastage €',font:{size:9}} }
+    }
+  }
+});
+
+// ── FILTER INTERACTION ─────────────────────────────────────────────────────────
+function setFilter(el, group) {
+  document.querySelectorAll(`.filter-btn[data-val]`).forEach(b => {
+    if(b.closest('.filter-bar')) {
+      const sameGroup = (group==='period')
+        ? ['2023','2024','all'].includes(b.dataset.val)
+        : ['all','food','beer','spirits','wine'].includes(b.dataset.val);
+      if(sameGroup) b.classList.remove('active');
+    }
+  });
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
